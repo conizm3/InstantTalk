@@ -108,6 +108,12 @@
             from { opacity: 1; transform: translateX(0); } 
             to { opacity: 0; transform: translateX(-50px); } 
         }
+
+        .slide-out-right { animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes slideOutRight { 
+            from { opacity: 1; transform: translateX(0); } 
+            to { opacity: 0; transform: translateX(50px); } 
+        }
         
         /* Swipe Hint Animation (Icon) - Slide Left/Right Slower */
         .animate-slide-hand-slow {
@@ -115,9 +121,9 @@
         }
         @keyframes slideHandSlow {
             0% { transform: translateX(0); }
-            25% { transform: translateX(-20px); } /* Left */
+            25% { transform: translateX(-15px); } /* Left */
             50% { transform: translateX(0); }
-            75% { transform: translateX(20px); } /* Right */
+            75% { transform: translateX(15px); } /* Right */
             100% { transform: translateX(0); }
         }
 
@@ -581,18 +587,32 @@
                 if (externalResult && resultRef.current) resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, [externalResult]);
 
-            // 画面表示上のデータ同期 (ただしDB更新は onUpdateWord で一元管理)
+            // 自動データ更新ロジック (表示中のデータ用)
             useEffect(() => {
                 if (externalResult) {
                     const savedItem = savedWords.find(w => w.word === externalResult.word);
-                    // ここではDB更新は行わない（handleSearch内の明示的な呼び出しに任せる）
-                    // 画面同期のみ行うべきだが、savedWordsはDBからのロード結果なので
-                    // DBが更新されればsavedWordsも更新される（handleUpdateWord経由で）
+                    if (savedItem) {
+                        if (savedItem.tips !== externalResult.tips || savedItem.audioUrl !== externalResult.audioUrl || (!savedItem.example && externalResult.example)) {
+                            onUpdateWord(externalResult);
+                        }
+                    }
                 }
-            }, [externalResult, savedWords]);
+            }, [externalResult, savedWords, onUpdateWord]);
 
             const currentData = externalResult;
             const isSaved = currentData && savedWords.some(w => w.word === currentData.word);
+
+            // 修正: フローティングボタンから呼ばれるリセット関数
+            const resetToHome = () => {
+                searchIdRef.current++; // 古い処理を無効化
+                setTerm('');
+                setExternalResult(null);
+                setLoading(false);
+                setIsEnriching(false);
+                
+                const mainEl = document.querySelector('main');
+                if (mainEl) mainEl.scrollTop = 0;
+            };
 
             return (
                 <div className="fade-in">
@@ -611,7 +631,16 @@
 
                     {currentData && (
                         <div ref={resultRef} className="neu-flat p-5 md:p-6 mb-8 fade-in relative mt-8">
-                            {isFromList && <button onClick={onBack} className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-white text-gray-400 w-10 h-10 rounded-full shadow-md flex items-center justify-center z-20 hover:text-[#258FAF] transition-colors border border-gray-100"><i className="fas fa-times text-lg"></i></button>}
+                            {/* 修正: 閉じるボタン (中央上部・枠外) */}
+                            {isFromList && (
+                                <button 
+                                    onClick={onBack} 
+                                    className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-white text-gray-400 w-10 h-10 rounded-full shadow-md flex items-center justify-center z-20 hover:text-[#258FAF] transition-colors border border-gray-100"
+                                >
+                                    <i className="fas fa-times text-lg"></i>
+                                </button>
+                            )}
+
                             <div className="flex justify-between items-start mb-6 border-b border-gray-100 pb-4">
                                 <div>
                                     <h2 className="text-3xl md:text-4xl font-bold text-[#258FAF] break-all mb-1">{currentData.word}</h2>
@@ -657,17 +686,10 @@
                         </div>
                     )}
                     
+                    {/* フローティングボタン: 検索画面をリセットしてトップに戻る */}
                     {!isFromList && currentData && (
                         <button
-                            onClick={() => { 
-                                searchIdRef.current++; 
-                                setExternalResult(null); 
-                                setTerm(''); 
-                                setLoading(false);
-                                setIsEnriching(false);
-                                const mainEl = document.querySelector('main');
-                                if (mainEl) mainEl.scrollTop = 0;
-                            }}
+                            onClick={resetToHome}
                             className="fixed bottom-[160px] right-4 w-14 h-14 bg-[#258FAF] text-white rounded-full shadow-lg flex items-center justify-center z-[60] hover:bg-[#1d6f8c] transition-transform active:scale-95"
                         >
                             <i className="fas fa-search text-xl"></i>
@@ -742,7 +764,7 @@
                     setIndex(prev => prev + 1);
                     setIsExiting(false);
                     setIsSwipeAction(null);
-                    if (cardRef.current) cardRef.current.style.transform = ''; // Reset transform
+                    if (cardRef.current) cardRef.current.style.transform = ''; 
                 }, 250);
             };
 
@@ -840,7 +862,7 @@
                                     <div className="md:hidden text-gray-300 flex items-center mt-1 gap-6 w-full justify-center px-8">
                                         <span className="text-lg font-bold text-gray-400 opacity-80 animate-flow-x">✕</span>
                                         <div className="flex items-center gap-1 text-gray-400 animate-flow-left opacity-50"><i className="fas fa-chevron-left text-xs"></i></div>
-                                        <div className="animate-slide-hand mx-2 flex flex-col items-center">
+                                        <div className="animate-slide-hand-slow mx-2 flex flex-col items-center">
                                             <i className="fas fa-hand-pointer text-2xl text-[#258FAF] opacity-80"></i>
                                             <span className="text-[8px] text-gray-400 mt-1">swipe</span>
                                         </div>

@@ -22,6 +22,7 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -263,19 +264,15 @@
         };
 
         // --- API Functions ---
-
-const fetchJishoData = async (term) => {
-    try {
-        // あなたのWorkers URL
-        const workerUrl = "https://curly-math-7d23.shimz777.workers.dev/"; 
         
-        // Workers側で ?keyword=... を受け取る仕様にしたので、この書き方でOKです
-        const res = await fetch(`${workerUrl}?keyword=${encodeURIComponent(term)}`);
-        
-        if (!res.ok) return null;
-        return await res.json();
-    } catch (e) { return null; }
-};
+        // ★修正済み: 安定している allorigins.win プロキシを使用
+        const fetchJishoData = async (term) => {
+            try {
+                const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(term)}`)}`);
+                if (!res.ok) return null;
+                return await res.json();
+            } catch (e) { return null; }
+        };
 
         const fetchFreeDictData = async (term) => {
             try {
@@ -534,7 +531,7 @@ const fetchJishoData = async (term) => {
                              if (isMounted.current && currentId === searchIdRef.current) setIsEnriching(false); 
                         });
                     } else {
-                          fetchEnrichment(coreData, term).then(enriched => {
+                         fetchEnrichment(coreData, term).then(enriched => {
                             if (enriched) {
                                 onUpdateWord(enriched);
                             }
@@ -917,7 +914,7 @@ const fetchJishoData = async (term) => {
                         if (u) {
                             showToast('ログインしました');
                             try {
-                                const doc = await db.collection('users').doc(u.uid).get();
+                                const doc = await db_firebase.collection('users').doc(u.uid).get();
                                 if (doc.exists) {
                                     const cloudWords = doc.data().words || [];
                                     await db.transaction('rw', db.words, async () => {

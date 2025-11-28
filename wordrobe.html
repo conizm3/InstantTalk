@@ -1,33 +1,31 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-   
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9941600818813301" crossorigin="anonymous"></script>
+    
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>wordrobe</title>
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Wordrobe">
 
     <link rel="manifest" href="./manifest.json">
-
-    <!-- Icon & OGP Settings -->
+    
     <link rel="apple-touch-icon" href="https://conizm3.github.io/wordrobe/images/wordrobe-icon.png">
     <link rel="icon" type="image/svg+xml" href="https://conizm3.github.io/wordrobe/images/wordrobe-icon.png">
     <meta property="og:title" content="wordrobe">
     <meta property="og:description" content="シンプルな英単語帳">
     <meta property="og:image" content="https://conizm3.github.io/wordrobe/images/wordrobe-ogp.png">
     
-    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Dexie.js (IndexedDB Wrapper) -->
     <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
 
-    <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -36,7 +34,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-<style>
+    <style>
         :root {
             --bg-color: #F8FAFC;
             --text-main: #475569;
@@ -45,7 +43,7 @@
             --shadow-dark: #E6EFF5;
             --ad-height: 0px;
             
-            /* ▼▼▼ 追加: iPhoneのノッチとホームバーの高さを取得する変数 ▼▼▼ */
+            /* iPhoneのノッチとホームバーの高さを取得（なければ20pxを代用） */
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 20px);
         }
@@ -56,26 +54,22 @@
             color: var(--text-main);
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
-            
-            /* ▼▼▼ 追加: アプリっぽくするために選択を禁止するが... ▼▼▼ */
-            user-select: none;
-            -webkit-user-select: none;
+            /* user-select: none; を削除しました（キーボードが出ない原因のため） */
         }
-
-        /* ▼▼▼ 追加: 入力フォームだけは選択・入力できるようにする（これでキーボードが出ます） ▼▼▼ */
-        input, textarea {
-            user-select: text !important;
-            -webkit-user-select: text !important;
-        }
-
+        
         .h-screen-safe {
             height: 100vh;
-            height: 100dvh; /* アドレスバーがない状態の高さ */
-            
-            /* ▼▼▼ 追加: 上下の安全領域（セーフエリア）を確保 ▼▼▼ */
-            padding-top: var(--safe-top); 
-            padding-bottom: var(--safe-bottom);
+            height: 100dvh;
             box-sizing: border-box;
+            /* 全体レイアウトはFlexboxで制御 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 入力フォーム調整: 16px以上にしないとiOSでズームされる */
+        input, textarea {
+            font-size: 16px !important;
+            transform: translate3d(0,0,0); /* 描画安定化 */
         }
 
         /* Neumorphism Utilities */
@@ -105,6 +99,7 @@
             box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
             border-radius: 16px;
             outline: none;
+            -webkit-appearance: none; /* iOSの影消し */
         }
 
         /* Animations */
@@ -172,26 +167,72 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* ▼▼▼ 修正: ナビゲーション位置調整（iPhoneホームバー回避） ▼▼▼ */
-        .nav-bottom {
-            bottom: 0 !important;
-            padding-bottom: var(--safe-bottom) !important; /* ホームバーの分だけ余白追加 */
-            height: calc(5rem + var(--safe-bottom)) !important; /* 本来の高さ(80px/5rem) + 余白 */
-            box-sizing: content-box; /* paddingを含めずに高さを計算させる */
-        }
-        
-        /* ▼▼▼ 修正: コンテンツ余白調整 ▼▼▼ */
-        .main-padding {
-            padding-bottom: calc(6rem + var(--safe-bottom)) !important;
+        /* ▼▼▼ Header: ノッチ対策（重要） ▼▼▼ */
+        header.custom-header {
+            width: 100%;
+            /* 上部のマージンを消して画面にくっつける */
+            margin: 0 !important;
+            /* 下側だけ角丸にする */
+            border-radius: 0 0 24px 24px !important;
+            
+            /* パディング計算: ノッチの高さ(safe-top) + 見た目の余白 */
+            /* ノッチがない端末でも最低44pxは確保 */
+            padding-top: max(var(--safe-top), 30px) !important;
+            padding-bottom: 15px;
+            padding-left: 20px;
+            padding-right: 20px;
+            
+            /* フレックス配置 */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            
+            /* 固定ではなく相対配置でフローに組み込む */
+            position: relative;
+            z-index: 50;
+            background: var(--bg-color);
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
         }
 
-        /* ▼▼▼ 追加: ヘッダー位置調整（iPhoneノッチ回避） ▼▼▼ */
-        header.neu-flat {
-            margin-top: 0 !important; /* 上部のマージンをリセット */
-            padding-top: max(1rem, var(--safe-top)) !important; /* ノッチの分だけ余白追加 */
-            height: calc(4rem + var(--safe-top)) !important;
-            border-radius: 0 0 16px 16px !important; /* 上部の角丸をなくして画面にくっつける */
+        /* ▼▼▼ Nav: ホームバー対策（重要） ▼▼▼ */
+        nav.custom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: var(--bg-color);
+            
+            /* ホームバーの高さを確保 */
+            padding-bottom: max(var(--safe-bottom), 15px) !important;
+            padding-top: 10px;
+            height: auto !important;
+            min-height: 80px;
+            
+            /* 上側だけ角丸 */
+            border-radius: 24px 24px 0 0 !important;
+            
+            /* Flexbox */
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            
+            /* 影 */
+            box-shadow: 0px -4px 10px var(--shadow-dark);
+            margin: 0 !important;
         }
+
+        /* ▼▼▼ Main: 余白調整 ▼▼▼ */
+        main.custom-main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            /* ナビゲーションバーの高さ分 + 余白 を確保して下に隠れないようにする */
+            padding-bottom: calc(90px + var(--safe-bottom)) !important;
+            position: relative;
+            z-index: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -276,9 +317,6 @@
             } catch (e) { return null; }
         };
 
-        // --- Data Fetching Strategies ---
-        // Note: QuickData is no longer used as per previous request to stop "forced translation"
-        
         const fetchRichData = async (term) => {
             let searchWord = term, isJpSearch = isJapanese(term), tips = "公開辞書/翻訳データ", primaryTrans = "", meanings = [], pronunciation = "", synonyms = [], audioUrl = "", jishoFound = false;
 
@@ -310,7 +348,6 @@
             } catch (e) {}
 
             if (!jishoFound) {
-                // 厳密なチェック: 英語入力でスペースを含まず、辞書にもない場合はエラー
                 if (!isJpSearch && !term.trim().includes(' ')) {
                      const fd = await fetchFreeDictData(term);
                      if (!fd || fd.length === 0) throw new Error("NOT_FOUND");
@@ -489,7 +526,6 @@
                 setLoadingMsg("検索中...");
                 setExternalResult(null);
 
-                // 速報(QuickData)は廃止し、いきなりRichDataを取得する
                 try {
                     const coreData = await fetchRichData(term);
                     
@@ -1072,9 +1108,9 @@
             };
 
             return (
-                <div className="h-screen-safe flex flex-col overflow-hidden">
+                <div className="h-screen-safe">
                     <header 
-                        className="p-4 z-50 flex justify-between items-center h-16 neu-flat mx-4 mt-4 mb-2 relative cursor-pointer hover:opacity-80 transition-opacity"
+                        className="custom-header neu-flat"
                     >
                         <div className="flex-1 flex justify-center items-center" onClick={resetToHome}>
                             <img src="https://conizm3.github.io/wordrobe/images/wordrobe-top.png" alt="wordrobe" className="h-8" />
@@ -1084,7 +1120,7 @@
                         </button>
                     </header>
 
-                    <main className="flex-1 overflow-y-auto p-4 pb-24 no-scrollbar relative z-0 main-with-ad">
+                    <main className="custom-main main-with-ad">
                         {tab === 'search' && (
                             <SearchView 
                                 key={searchViewKey} 
@@ -1134,7 +1170,7 @@
                     />
 
                     {/* ナビゲーション: 固定配置 */}
-                    <nav className="neu-flat mx-4 h-20 flex justify-around items-center z-50 fixed left-0 right-0 bg-[#F8FAFC] nav-with-ad nav-bottom">
+                    <nav className="custom-nav neu-flat nav-with-ad nav-bottom">
                         <button onClick={() => resetToHome()} className={`nav-btn flex flex-col items-center w-1/3 ${tab === 'search' ? 'tab-active' : 'tab-inactive'}`}>
                             <div className={`w-10 h-10 flex items-center justify-center rounded-xl mb-1 transition-all ${tab === 'search' ? 'neu-pressed' : ''}`}>
                                 <i className="fas fa-search text-lg"></i>

@@ -34,7 +34,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <style>
+   <style>
         :root {
             --bg-color: #F8FAFC;
             --text-main: #475569;
@@ -43,7 +43,7 @@
             --shadow-dark: #E6EFF5;
             --ad-height: 0px;
             
-            /* iPhoneのノッチとホームバーの高さを取得（なければ20pxを代用） */
+            /* iPhoneのノッチ対策変数 */
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 20px);
         }
@@ -54,22 +54,29 @@
             color: var(--text-main);
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
-            /* user-select: none; を削除しました（キーボードが出ない原因のため） */
+            
+            /* ▼▼▼ 修正1: 全体の選択を禁止しつつ、タップ動作を正常化 ▼▼▼ */
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation; 
+        }
+
+        /* ▼▼▼ 修正1: 入力フォームだけは「絶対に」選択・入力できるようにする（これでキーボードが出ます） ▼▼▼ */
+        input, textarea {
+            font-size: 16px !important; /* iOSの勝手なズーム防止 */
+            transform: translate3d(0,0,0);
+            
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            pointer-events: auto !important;
         }
         
         .h-screen-safe {
             height: 100vh;
             height: 100dvh;
             box-sizing: border-box;
-            /* 全体レイアウトはFlexboxで制御 */
             display: flex;
             flex-direction: column;
-        }
-
-        /* 入力フォーム調整: 16px以上にしないとiOSでズームされる */
-        input, textarea {
-            font-size: 16px !important;
-            transform: translate3d(0,0,0); /* 描画安定化 */
         }
 
         /* Neumorphism Utilities */
@@ -99,14 +106,13 @@
             box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
             border-radius: 16px;
             outline: none;
-            -webkit-appearance: none; /* iOSの影消し */
+            -webkit-appearance: none;
         }
 
         /* Animations */
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Toast専用アニメーション */
         @keyframes toastFadeIn {
             from { opacity: 0; transform: translate(-50%, 20px); }
             to { opacity: 1; transform: translate(-50%, 0); }
@@ -117,32 +123,20 @@
             transform: translate(-50%, 0);
         }
         
-        /* Review Card Animations */
         .slide-in-right { animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        @keyframes slideInRight { 
-            from { opacity: 0; transform: translateX(50px); } 
-            to { opacity: 1; transform: translateX(0); } 
-        }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
         
         .slide-out-left { animation: slideOutLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        @keyframes slideOutLeft { 
-            from { opacity: 1; transform: translateX(0); } 
-            to { opacity: 0; transform: translateX(-50px); } 
-        }
+        @keyframes slideOutLeft { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-50px); } }
 
         .slide-out-right { animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        @keyframes slideOutRight { 
-            from { opacity: 1; transform: translateX(0); } 
-            to { opacity: 0; transform: translateX(50px); } 
-        }
+        @keyframes slideOutRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(50px); } }
         
-        /* Flow Animation for Arrows */
         .animate-flow-out-left { animation: flowOutLeft 1.5s infinite; }
         @keyframes flowOutLeft { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(-10px); } }
         .animate-flow-out-right { animation: flowOutRight 1.5s infinite; }
         @keyframes flowOutRight { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(10px); } }
 
-        /* Card Flip Fixed */
         .card-flip { perspective: 1000px; }
         .card-inner { 
             transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); 
@@ -154,7 +148,7 @@
         }
         .card-front, .card-back { 
             backface-visibility: hidden; 
-            -webkit-backface-visibility: hidden; /* Safari fix */
+            -webkit-backface-visibility: hidden; 
             position: absolute; 
             width: 100%; 
             height: 100%; 
@@ -167,34 +161,31 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* ▼▼▼ Header: ノッチ対策（重要） ▼▼▼ */
+        /* ▼▼▼ 修正2: ヘッダーの高さ修正（高すぎないようにパディングを縮小） ▼▼▼ */
         header.custom-header {
             width: 100%;
-            /* 上部のマージンを消して画面にくっつける */
             margin: 0 !important;
-            /* 下側だけ角丸にする */
             border-radius: 0 0 24px 24px !important;
             
-            /* パディング計算: ノッチの高さ(safe-top) + 見た目の余白 */
-            /* ノッチがない端末でも最低44pxは確保 */
-            padding-top: max(var(--safe-top), 30px) !important;
-            padding-bottom: 15px;
+            /* ノッチの高さ(env)のみ確保し、余計な余白を削除 */
+            padding-top: env(safe-area-inset-top, 20px) !important;
+            padding-bottom: 10px; /* 必要最小限の余白 */
             padding-left: 20px;
             padding-right: 20px;
             
-            /* フレックス配置 */
+            /* 高さを自動にし、min-heightを削除 */
+            height: auto !important;
+            
             display: flex;
             justify-content: space-between;
             align-items: center;
             
-            /* 固定ではなく相対配置でフローに組み込む */
             position: relative;
             z-index: 50;
             background: var(--bg-color);
             box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
         }
 
-        /* ▼▼▼ Nav: ホームバー対策（重要） ▼▼▼ */
         nav.custom-nav {
             position: fixed;
             bottom: 0;
@@ -202,37 +193,26 @@
             right: 0;
             z-index: 50;
             background: var(--bg-color);
-            
-            /* ホームバーの高さを確保 */
             padding-bottom: max(var(--safe-bottom), 15px) !important;
             padding-top: 10px;
             height: auto !important;
             min-height: 80px;
-            
-            /* 上側だけ角丸 */
             border-radius: 24px 24px 0 0 !important;
-            
-            /* Flexbox */
             display: flex;
             justify-content: space-around;
             align-items: center;
-            
-            /* 影 */
             box-shadow: 0px -4px 10px var(--shadow-dark);
             margin: 0 !important;
         }
 
-        /* ▼▼▼ Main: 余白調整 ▼▼▼ */
         main.custom-main {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-            /* ナビゲーションバーの高さ分 + 余白 を確保して下に隠れないようにする */
             padding-bottom: calc(90px + var(--safe-bottom)) !important;
             position: relative;
             z-index: 0;
         }
-
     </style>
 </head>
 <body>

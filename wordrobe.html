@@ -264,10 +264,13 @@
 
         // --- API Functions ---
         // 修正: 安定性を最優先し、allorigins.winのみを使用する構成に戻しました。
-        const fetchJishoData = async (term) => {
+      const fetchJishoData = async (term) => {
             try {
-                const targetUrl = `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(term)}`;
-                const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`);
+                // ▼▼▼ ここにさっきコピーしたURLを貼る ▼▼▼
+                // 注: 末尾にスラッシュ(/)があってもなくても動きます
+                const workerUrl = "ここにコピーしたURLを貼り付け"; 
+                
+                const res = await fetch(`${workerUrl}?keyword=${encodeURIComponent(term)}`);
                 
                 if (!res.ok) return null;
                 return await res.json();

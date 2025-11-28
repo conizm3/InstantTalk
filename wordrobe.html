@@ -34,7 +34,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-<style>
+    <style>
         :root {
             --bg-color: #F8FAFC;
             --text-main: #475569;
@@ -55,7 +55,7 @@
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
             
-            /* 基本的にアプリらしく選択不可にするが... */
+            /* 全体の選択を禁止（アプリっぽくするため） */
             -webkit-user-select: none;
             user-select: none;
             
@@ -63,7 +63,7 @@
             touch-action: manipulation;
         }
 
-        /* 入力フォームは「絶対に」選択・入力できるようにする（重要） */
+        /* 重要修正: 入力フォームだけは「絶対に」選択・入力できるように上書きする */
         input, textarea {
             /* iOSで入力時に画面がズームされるのを防ぐ必須設定 */
             font-size: 16px !important;

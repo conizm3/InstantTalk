@@ -54,6 +54,21 @@
             color: var(--text-main);
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
+
+            body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+            
+            /* ここにあった user-select: none; を削除し、text（選択可能）にします */
+            -webkit-user-select: text;
+            user-select: text;
+            
+            /* タップの反応を良くする設定 */
+            touch-action: manipulation;
+        }
             
             /* ▼▼▼ 修正1: 全体の選択を禁止しつつ、タップ動作を正常化 ▼▼▼ */
             -webkit-user-select: none;
@@ -62,21 +77,19 @@
         }
 
         /* ▼▼▼ 修正1: 入力フォームだけは「絶対に」選択・入力できるようにする（これでキーボードが出ます） ▼▼▼ */
-        input, textarea {
-            font-size: 16px !important; /* iOSの勝手なズーム防止 */
-            transform: translate3d(0,0,0);
+input, textarea {
+            /* iOSで入力時に画面がズームされるのを防ぐ必須設定 */
+            font-size: 16px !important;
             
+            /* 入力エリアを強制的に選択可能にする */
             -webkit-user-select: text !important;
             user-select: text !important;
+            
+            /* タップイベントを確実に受け取る */
             pointer-events: auto !important;
-        }
-        
-        .h-screen-safe {
-            height: 100vh;
-            height: 100dvh;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
+            
+            /* 描画バグ防止 */
+            transform: translate3d(0,0,0);
         }
 
         /* Neumorphism Utilities */

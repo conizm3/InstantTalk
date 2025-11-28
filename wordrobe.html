@@ -36,27 +36,46 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <style>
+<style>
         :root {
             --bg-color: #F8FAFC;
             --text-main: #475569;
             --accent: #258FAF;
             --shadow-light: #FFFFFF;
             --shadow-dark: #E6EFF5;
-            /* 広告削除に伴い高さを0に */
             --ad-height: 0px;
+            
+            /* ▼▼▼ 追加: iPhoneのノッチとホームバーの高さを取得する変数 ▼▼▼ */
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
         }
+        
         body {
             font-family: 'Noto Sans JP', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
+            
+            /* ▼▼▼ 追加: アプリっぽくするために選択を禁止するが... ▼▼▼ */
+            user-select: none;
+            -webkit-user-select: none;
         }
-        
+
+        /* ▼▼▼ 追加: 入力フォームだけは選択・入力できるようにする（これでキーボードが出ます） ▼▼▼ */
+        input, textarea {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+
         .h-screen-safe {
             height: 100vh;
-            height: 100dvh;
+            height: 100dvh; /* アドレスバーがない状態の高さ */
+            
+            /* ▼▼▼ 追加: 上下の安全領域（セーフエリア）を確保 ▼▼▼ */
+            padding-top: var(--safe-top); 
+            padding-bottom: var(--safe-bottom);
+            box-sizing: border-box;
         }
 
         /* Neumorphism Utilities */
@@ -153,13 +172,25 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* ナビゲーション位置調整: 広告削除のため最下部へ */
+        /* ▼▼▼ 修正: ナビゲーション位置調整（iPhoneホームバー回避） ▼▼▼ */
         .nav-bottom {
             bottom: 0 !important;
+            padding-bottom: var(--safe-bottom) !important; /* ホームバーの分だけ余白追加 */
+            height: calc(5rem + var(--safe-bottom)) !important; /* 本来の高さ(80px/5rem) + 余白 */
+            box-sizing: content-box; /* paddingを含めずに高さを計算させる */
         }
-        /* メインコンテンツのパディング調整: ナビ(80px) + 余白 */
+        
+        /* ▼▼▼ 修正: コンテンツ余白調整 ▼▼▼ */
         .main-padding {
-            padding-bottom: 96px !important;
+            padding-bottom: calc(6rem + var(--safe-bottom)) !important;
+        }
+
+        /* ▼▼▼ 追加: ヘッダー位置調整（iPhoneノッチ回避） ▼▼▼ */
+        header.neu-flat {
+            margin-top: 0 !important; /* 上部のマージンをリセット */
+            padding-top: max(1rem, var(--safe-top)) !important; /* ノッチの分だけ余白追加 */
+            height: calc(4rem + var(--safe-top)) !important;
+            border-radius: 0 0 16px 16px !important; /* 上部の角丸をなくして画面にくっつける */
         }
     </style>
 </head>
